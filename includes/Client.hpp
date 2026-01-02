@@ -6,7 +6,7 @@
 /*   By: mabou-ha <mabou-ha>                        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 12:43:03 by mabou-ha          #+#    #+#             */
-/*   Updated: 2025/12/28 12:51:52 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/02 01:41:05 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,24 +18,28 @@
 
 class Client
 {
-	public:
-		int fd;
-		std::string host;
-		std::string inbuf;
-		std::string outbuf;
-		bool passOk;
-		bool hasNick;
-		bool hasUser;
-		bool registered;
-		std::string nick;
-		std::string user;
-		std::set<std::string> channels;
+    public:
+        int fd;
+        std::string host;
 
-		Client();
-		Client(int fd_, const std::string &host_);
-		
-		void queue(const std::string &data);
-		bool wantsWrite() const;
+        std::string inbuf;
+        std::string outbuf;
+
+        bool passOk;
+        bool hasNick;
+        bool hasUser;
+        bool registered;
+
+        std::string nick;
+        std::string user;
+
+        std::set<std::string> channels;
+
+        Client();
+        Client(int fd_, const std::string &host_);
+
+        void queue(const std::string &data);
+        bool wantsWrite() const;
 };
 
 #endif

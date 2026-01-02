@@ -2,7 +2,7 @@ NAME = ircserv
 
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-INCLUDES = -Iincludes
+INCLUDES = -I includes
 
 SRCS = \
 	src/main.cpp \

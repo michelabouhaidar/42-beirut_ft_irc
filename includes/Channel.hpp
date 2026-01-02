@@ -6,7 +6,7 @@
 /*   By: mabou-ha <mabou-ha>                        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 12:47:36 by mabou-ha          #+#    #+#             */
-/*   Updated: 2025/12/28 12:51:56 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/02 01:40:49 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,20 +24,24 @@ class Channel
 		std::set<int> members;
 		std::set<int> operators;
 		std::set<int> invited;
-		bool modeInviteOnly;
-		bool modeTopicOpOnly;
-		bool modeKey;
+
+		bool modeInviteOnly;	 // +i
+		bool modeTopicOpOnly;	// +t
+		bool modeKey;			// +k
 		std::string key;
-		bool modeLimit;
+		bool modeLimit;		  // +l
 		int userLimit;
 
 		Channel();
 		Channel(const std::string &name_);
-		
-		bool isMember(int fd)const;
-		bool isOp(int fd)const;
+
+		bool isMember(int fd) const;
+		bool isOp(int fd) const;
+
 		void addMember(int fd);
-		void removeMemeber(int fd);
+		void removeMember(int fd);
+
+		bool isFull() const;
 };
 
 #endif
