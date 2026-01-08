@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Handlers.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mabou-ha <mabou-ha>                        +#+  +:+       +#+        */
+/*   By: mabou-ha <mabou-ha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 13:05:30 by mabou-ha          #+#    #+#             */
-/*   Updated: 2026/01/07 02:36:49 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/08 20:16:29 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@
 static std::string prefixOf(Server &srv, int fd)
 {
 	Client *c = srv.getClient(fd);
-	if (!c) return ":unknown";
+	if (!c) 
+		return ":unknown";
 	std::string n = c->hasNick ? c->nick : "*";
 	std::string u = c->hasUser ? c->user : "user";
 	return ":" + n + "!" + u + "@" + c->host;

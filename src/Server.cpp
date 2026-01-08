@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mabou-ha <mabou-ha>                        +#+  +:+       +#+        */
+/*   By: mabou-ha <mabou-ha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 13:05:37 by mabou-ha          #+#    #+#             */
-/*   Updated: 2026/01/07 02:34:13 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/08 20:11:10 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,8 @@ const std::string& Server::getServerName() const { return serverName_; }
 void Server::setNonBlocking(int fd)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
-	if (flags < 0) throw std::runtime_error("fcntl(F_GETFL) failed");
+	if (flags < 0) 
+		throw std::runtime_error("fcntl(F_GETFL) failed");
 	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
 		throw std::runtime_error("fcntl(F_SETFL, O_NONBLOCK) failed");
 }
@@ -63,7 +64,8 @@ void Server::setNonBlocking(int fd)
 void Server::setupListenSocket()
 {
 	listenFd_ = socket(AF_INET, SOCK_STREAM, 0);
-	if (listenFd_ < 0) throw std::runtime_error("socket() failed");
+	if (listenFd_ < 0) 
+		throw std::runtime_error("socket() failed");
 
 	int yes = 1;
 	if (setsockopt(listenFd_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
@@ -169,21 +171,24 @@ void Server::handleAccept()
 Client* Server::getClient(int fd)
 {
 	std::map<int, Client>::iterator it = clients_.find(fd);
-	if (it == clients_.end()) return 0;
+	if (it == clients_.end())
+		return 0;
 	return &it->second;
 }
 
 Channel* Server::getChannel(const std::string &name)
 {
 	std::map<std::string, Channel>::iterator it = channels_.find(name);
-	if (it == channels_.end()) return 0;
+	if (it == channels_.end())
+		return 0;
 	return &it->second;
 }
 
 Channel* Server::getOrCreateChannel(const std::string &name)
 {
 	Channel *ch = getChannel(name);
-	if (ch) return ch;
+	if (ch) 
+		return ch;
 
 	channels_.insert(std::make_pair(name, Channel(name)));
 	return getChannel(name);
@@ -290,7 +295,8 @@ void Server::processLine(int fd, const std::string &line)
 void Server::sendToClient(int fd, const std::string &msg)
 {
 	Client *c = getClient(fd);
-	if (!c) return;
+	if (!c)
+		return;
 	c->queue(msg);
 }
 
