@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Message.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mabou-ha <mabou-ha>                        +#+  +:+       +#+        */
+/*   By: mabou-ha <mabou-ha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 13:05:32 by mabou-ha          #+#    #+#             */
-/*   Updated: 2026/01/07 02:16:04 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/12 01:54:23 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,6 @@ Message Message::parse(const std::string &line)
 {
 	Message m;
 	m.raw = line;
-
 	std::string s = trim(line);
 	if (s.empty())
 		return m;
@@ -52,7 +51,6 @@ Message Message::parse(const std::string &line)
 		if (s.empty())
 			return m;
 	}
-
 	std::string::size_type trailPos = s.find(" :");
 	if (trailPos != std::string::npos)
 	{
@@ -60,17 +58,13 @@ Message Message::parse(const std::string &line)
 		m.trailing = s.substr(trailPos + 2);
 		s = trim(s.substr(0, trailPos));
 	}
-
 	std::istringstream iss(s);
 	std::string cmd;
 	if (!(iss >> cmd))
 		return m;
-
 	m.command = toUpper(cmd);
-
 	std::string p;
 	while (iss >> p)
 		m.params.push_back(p);
-
 	return m;
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mabou-ha <mabou-ha>                        +#+  +:+       +#+        */
+/*   By: mabou-ha <mabou-ha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 12:52:19 by mabou-ha          #+#    #+#             */
-/*   Updated: 2026/01/07 02:43:08 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/12 01:07:55 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,9 @@ class Server
 
 		void sendToClient(int fd, const std::string &msg);
 		void sendNumeric(int fd, int code, const std::string &target, const std::string &text);
+		void sendNumeric(int fd, int code,
+					const std::vector<std::string> &params,
+					const std::string &trailing);
 		void broadcastToChannel(const std::string &chan, int exceptFd, const std::string &msg);
 
 		bool nickExists(const std::string &nick) const;

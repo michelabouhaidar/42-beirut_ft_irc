@@ -6,7 +6,7 @@
 /*   By: mabou-ha <mabou-ha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 13:05:37 by mabou-ha          #+#    #+#             */
-/*   Updated: 2026/01/08 20:11:10 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/12 01:59:55 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,17 +26,25 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-static std::string itos(int x)
+#include "Handlers.hpp"
+
+volatile sig_atomic_t g_stop = 0;
+
+static void onSigInt(int)
 {
-	std::ostringstream oss;
-	oss << x;
-	return oss.str();
+	g_stop = 1;
 }
 
-Server::Server(int port, const std::string &password)
-	: port_(port), password_(password), listenFd_(-1), running_(true), serverName_("ircserv")
+Server::Server(int port, const std::string &password):
+	port_(port),
+	password_(password),
+	listenFd_(-1),
+	running_(true),
+	serverName_("ircserv")
 {
 	std::signal(SIGPIPE, SIG_IGN);
+	std::signal(SIGINT, onSigInt);
+	std::signal(SIGTERM, onSigInt);
 	setupListenSocket();
 }
 
@@ -44,7 +52,6 @@ Server::~Server()
 {
 	if (listenFd_ != -1)
 		close(listenFd_);
-
 	for (std::map<int, Client>::iterator it = clients_.begin(); it != clients_.end(); ++it)
 		close(it->first);
 }
@@ -66,36 +73,29 @@ void Server::setupListenSocket()
 	listenFd_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenFd_ < 0) 
 		throw std::runtime_error("socket() failed");
-
 	int yes = 1;
 	if (setsockopt(listenFd_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0)
 		throw std::runtime_error("setsockopt(SO_REUSEADDR) failed");
-
 	sockaddr_in addr;
 	std::memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	addr.sin_port = htons((unsigned short)port_);
-
 	if (bind(listenFd_, (sockaddr*)&addr, sizeof(addr)) < 0)
 		throw std::runtime_error("bind() failed");
-
 	if (listen(listenFd_, 128) < 0)
 		throw std::runtime_error("listen() failed");
-
 	setNonBlocking(listenFd_);
 }
 
 void Server::buildPollFds(std::vector<struct pollfd> &pfds)
 {
 	pfds.clear();
-
 	pollfd p;
 	p.fd = listenFd_;
 	p.events = POLLIN;
 	p.revents = 0;
 	pfds.push_back(p);
-
 	for (std::map<int, Client>::iterator it = clients_.begin(); it != clients_.end(); ++it)
 	{
 		pollfd c;
@@ -114,14 +114,17 @@ void Server::run()
 	{
 		std::vector<pollfd> pfds;
 		buildPollFds(pfds);
-
 		int ret = poll(&pfds[0], pfds.size(), 1000);
 		if (ret < 0)
 		{
-			if (errno == EINTR) continue;
+			if (errno == EINTR)
+			{
+				if (g_stop)
+                	break;
+				continue;
+			}
 			continue;
 		}
-
 		for (std::vector<pollfd>::iterator it = pfds.begin(); it != pfds.end(); ++it)
 		{
 			if (it->fd == listenFd_)
@@ -145,6 +148,11 @@ void Server::run()
 			}
 		}
 	}
+	std::vector<int> fds;
+	for (std::map<int, Client>::iterator it = clients_.begin(); it != clients_.end(); ++it)
+		fds.push_back(it->first);
+	for (std::vector<int>::iterator it = fds.begin(); it != fds.end(); ++it)
+		disconnectClient(*it, "Server shutting down");
 }
 
 void Server::handleAccept()
@@ -160,11 +168,10 @@ void Server::handleAccept()
 				break;
 			break;
 		}
-
 		setNonBlocking(cfd);
-
 		std::string host = inet_ntoa(addr.sin_addr);
 		clients_.insert(std::make_pair(cfd, Client(cfd, host)));
+		sendToClient(cfd, ":" + serverName_ + " NOTICE AUTH :*** Welcome, please authenticate\r\n");
 	}
 }
 
@@ -189,7 +196,6 @@ Channel* Server::getOrCreateChannel(const std::string &name)
 	Channel *ch = getChannel(name);
 	if (ch) 
 		return ch;
-
 	channels_.insert(std::make_pair(name, Channel(name)));
 	return getChannel(name);
 }
@@ -222,10 +228,9 @@ int Server::fdByNick(const std::string &nick) const
 void Server::handleClientRead(int fd)
 {
 	Client *c = getClient(fd);
-	if (!c) return;
-
+	if (!c)
+		return;
 	char buf[4096];
-
 	while (true)
 	{
 		ssize_t n = recv(fd, buf, sizeof(buf), 0);
@@ -241,32 +246,27 @@ void Server::handleClientRead(int fd)
 			disconnectClient(fd, "Read error");
 			return;
 		}
-
 		c->inbuf.append(buf, buf + n);
-
 		while (true)
 		{
 			std::string::size_type pos = c->inbuf.find('\n');
 			if (pos == std::string::npos)
 				break;
-		
 			std::string line = c->inbuf.substr(0, pos);
 			c->inbuf.erase(0, pos + 1);
 			if (!line.empty() && line[line.size() - 1] == '\r')
 				line.erase(line.size() - 1);
-		
 			if (!line.empty())
 				processLine(fd, line);
 		}
-
 	}
 }
 
 void Server::handleClientWrite(int fd)
 {
 	Client *c = getClient(fd);
-	if (!c) return;
-
+	if (!c)
+		return;
 	while (!c->outbuf.empty())
 	{
 		ssize_t n = send(fd, c->outbuf.c_str(), c->outbuf.size(), 0);
@@ -277,7 +277,6 @@ void Server::handleClientWrite(int fd)
 		}
 		if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
 			return;
-
 		disconnectClient(fd, "Write error");
 		return;
 	}
@@ -288,7 +287,6 @@ void Server::processLine(int fd, const std::string &line)
 	Message msg = Message::parse(line);
 	if (msg.command.empty())
 		return;
-
 	handleCommand(*this, fd, msg);
 }
 
@@ -303,20 +301,40 @@ void Server::sendToClient(int fd, const std::string &msg)
 void Server::sendNumeric(int fd, int code, const std::string &target, const std::string &text)
 {
 	std::string c = itos(code);
+	while (c.size() < 3) 
+		c = "0" + c;
+	std::string line = ":" + serverName_ + " " + c + " " + target + " :" + text + "\r\n";
+	sendToClient(fd, line);
+}
+
+void Server::sendNumeric(int fd, int code,
+							const std::vector<std::string> &params,
+							const std::string &trailing)
+{
+	std::string c = itos(code);
 	while (c.size() < 3) c = "0" + c;
 
-	std::string line = ":" + serverName_ + " " + c + " " + target + " :" + text + "\r\n";
+	std::string line = ":" + serverName_ + " " + c;
+
+	for (size_t i = 0; i < params.size(); ++i)
+		line += " " + params[i];
+
+	if (!trailing.empty())
+		line += " :" + trailing;
+
+	line += "\r\n";
 	sendToClient(fd, line);
 }
 
 void Server::broadcastToChannel(const std::string &chan, int exceptFd, const std::string &msg)
 {
 	Channel *ch = getChannel(chan);
-	if (!ch) return;
-
+	if (!ch)
+		return;
 	for (std::set<int>::iterator it = ch->members.begin(); it != ch->members.end(); ++it)
 	{
-		if (*it == exceptFd) continue;
+		if (*it == exceptFd)
+			continue;
 		sendToClient(*it, msg);
 	}
 }
@@ -324,7 +342,6 @@ void Server::broadcastToChannel(const std::string &chan, int exceptFd, const std
 void Server::disconnectClient(int fd, const std::string &reason)
 {
 	Client *c = getClient(fd);
-
 	if (c)
 	{
 		for (std::set<std::string>::iterator it = c->channels.begin(); it != c->channels.end(); ++it)
@@ -341,7 +358,6 @@ void Server::disconnectClient(int fd, const std::string &reason)
 	}
 	std::string err = "ERROR :" + reason + "\r\n";
 	::send(fd, err.c_str(), err.size(), 0);
-
 	close(fd);
 	clients_.erase(fd);
 }
