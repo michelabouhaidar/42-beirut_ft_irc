@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mabou-ha <mabou-ha>                        +#+  +:+       +#+        */
+/*   By: mabou-ha <mabou-ha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 13:05:25 by mabou-ha          #+#    #+#             */
-/*   Updated: 2026/01/07 02:24:59 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/18 17:36:49 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ void Channel::removeMember(int fd)
 
 bool Channel::isFull() const
 {
-	if (!modeLimit) return false;
+	if (!modeLimit)
+		return false;
 	return (int)members.size() >= userLimit;
 }

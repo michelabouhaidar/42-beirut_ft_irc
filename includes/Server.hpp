@@ -6,7 +6,7 @@
 /*   By: mabou-ha <mabou-ha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 12:52:19 by mabou-ha          #+#    #+#             */
-/*   Updated: 2026/01/12 01:07:55 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/18 19:20:49 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,40 +24,11 @@
 
 class Server
 {
-	public:
-		Server(int port, const std::string &password);
-		~Server();
-
-		void run();
-
-		void sendToClient(int fd, const std::string &msg);
-		void sendNumeric(int fd, int code, const std::string &target, const std::string &text);
-		void sendNumeric(int fd, int code,
-					const std::vector<std::string> &params,
-					const std::string &trailing);
-		void broadcastToChannel(const std::string &chan, int exceptFd, const std::string &msg);
-
-		bool nickExists(const std::string &nick) const;
-		int fdByNick(const std::string &nick) const;
-
-		Client *getClient(int fd);
-		Channel *getChannel(const std::string &name);
-
-		Channel *getOrCreateChannel(const std::string &name);
-		void eraseChannel(const std::string &name);
-
-		const std::string& getPassword() const;
-		const std::string& getServerName() const;
-
-		void disconnectClient(int fd, const std::string &reason);
-
 	private:
 		int port_;
 		std::string password_;
-
 		int listenFd_;
 		bool running_;
-
 		std::string serverName_;
 		std::map<int, Client> clients_;
 		std::map<std::string, Channel> channels_;
@@ -65,12 +36,29 @@ class Server
 		void setupListenSocket();
 		void setNonBlocking(int fd);
 		void buildPollFds(std::vector<struct pollfd> &pfds);
-
 		void handleAccept();
 		void handleClientRead(int fd);
 		void handleClientWrite(int fd);
-
 		void processLine(int fd, const std::string &line);
+
+	public:
+		Server(int port, const std::string &password);
+		~Server();
+
+		void run();
+		void sendToClient(int fd, const std::string &msg);
+		void sendNumeric(int fd, int code, const std::string &target, const std::string &text);
+		void sendNumeric(int fd, int code, const std::vector<std::string> &params, const std::string &trailing);
+		void broadcastToChannel(const std::string &chan, int exceptFd, const std::string &msg);
+		bool nickExists(const std::string &nick) const;
+		int fdByNick(const std::string &nick) const;
+		Client *getClient(int fd);
+		Channel *getChannel(const std::string &name);
+		Channel *getOrCreateChannel(const std::string &name);
+		void eraseChannel(const std::string &name);
+		const std::string& getPassword() const;
+		const std::string& getServerName() const;
+		void disconnectClient(int fd, const std::string &reason);
 };
 
 #endif

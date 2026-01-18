@@ -6,7 +6,7 @@
 /*   By: mabou-ha <mabou-ha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/28 13:05:37 by mabou-ha          #+#    #+#             */
-/*   Updated: 2026/01/12 01:59:55 by mabou-ha         ###   ########.fr       */
+/*   Updated: 2026/01/18 23:13:03 by mabou-ha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-
-#include "Handlers.hpp"
 
 volatile sig_atomic_t g_stop = 0;
 
@@ -120,7 +118,7 @@ void Server::run()
 			if (errno == EINTR)
 			{
 				if (g_stop)
-                	break;
+					break;
 				continue;
 			}
 			continue;
